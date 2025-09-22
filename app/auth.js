@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, KeyboardAvoidingView, Platform, Image, Modal } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, KeyboardAvoidingView, Platform, Image, Modal, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Eye, EyeOff, Mail, Lock, User, Phone, MapPin, CircleCheck as CheckCircle } from 'lucide-react-native';
+import { Eye, EyeOff, Mail, Lock, User, Phone, MapPin, CircleCheck as CheckCircle, ArrowLeft, Sparkles } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { signIn, signUp, sendVerificationEmail, getUserProfile, resetPassword, getAreas, getDepartments, getStates, getDistrictsByState, getAreasByDistrict } from '../lib/supabase';
 import { showSuccessToast, showErrorToast, showInfoToast } from '../components/Toast';
 import DropdownSelector from '../components/DropdownSelector';
+
+const { width } = Dimensions.get('window');
 
 export default function AuthScreen() {
   const [isLogin, setIsLogin] = useState(true);
@@ -46,10 +49,38 @@ export default function AuthScreen() {
   const router = useRouter();
 
   const userTypes = [
-    { id: 'user', label: 'Citizen', icon: '👤', color: '#1E40AF', description: 'Report issues and engage with community' },
-    { id: 'area_super_admin', label: 'Area Super Admin', icon: '👨‍💼', color: '#10B981', description: 'Manage area-wide operations and assign to departments' },
-    { id: 'department_admin', label: 'Department Admin', icon: '🏛️', color: '#8B5CF6', description: 'Manage department issues and create tenders' },
-    { id: 'tender', label: 'Contractor', icon: '🏗️', color: '#F59E0B', description: 'Bid on municipal projects and tenders' },
+    {
+      id: 'user',
+      label: 'Citizen',
+      icon: '👤',
+      gradient: ['#667eea', '#764ba2'],
+      description: 'Report issues and engage with community',
+      bgColor: '#F0F4FF'
+    },
+    {
+      id: 'area_super_admin',
+      label: 'Area Super Admin',
+      icon: '👨‍💼',
+      gradient: ['#11998e', '#38ef7d'],
+      description: 'Manage area-wide operations and assign to departments',
+      bgColor: '#F0FDF4'
+    },
+    {
+      id: 'department_admin',
+      label: 'Department Admin',
+      icon: '🏛️',
+      gradient: ['#8360c3', '#2ebf91'],
+      description: 'Manage department issues and create tenders',
+      bgColor: '#FAF5FF'
+    },
+    {
+      id: 'tender',
+      label: 'Contractor',
+      icon: '🏗️',
+      gradient: ['#f093fb', '#f5576c'],
+      description: 'Bid on municipal projects and tenders',
+      bgColor: '#FFF7ED'
+    },
   ];
 
   // Load states when admin type is selected and we reach step 2
@@ -480,7 +511,11 @@ export default function AuthScreen() {
       <View style={styles.stepIndicator}>
         <View style={styles.stepContainer}>
           <View style={[styles.step, currentStep >= 1 && styles.stepActive]}>
-            <Text style={[styles.stepText, currentStep >= 1 && styles.stepTextActive]}>1</Text>
+            {currentStep > 1 ? (
+              <CheckCircle size={16} color="#FFFFFF" />
+            ) : (
+              <Text style={[styles.stepText, currentStep >= 1 && styles.stepTextActive]}>1</Text>
+            )}
           </View>
           <View style={[styles.stepLine, currentStep >= 2 && styles.stepLineActive]} />
           <View style={[styles.step, currentStep >= 2 && styles.stepActive]}>
@@ -488,8 +523,8 @@ export default function AuthScreen() {
           </View>
         </View>
         <View style={styles.stepLabels}>
-          <Text style={styles.stepLabel}>Personal Info</Text>
-          <Text style={styles.stepLabel}>Account Setup</Text>
+          <Text style={[styles.stepLabel, currentStep === 1 && styles.stepLabelActive]}>Personal Info</Text>
+          <Text style={[styles.stepLabel, currentStep === 2 && styles.stepLabelActive]}>Account Setup</Text>
         </View>
       </View>
     );
@@ -500,32 +535,49 @@ export default function AuthScreen() {
 
     return (
       <View style={styles.userTypeContainer}>
-        <Text style={styles.userTypeLabel}>Select User Type</Text>
-        <View style={styles.userTypeButtons}>
-          {userTypes.map((type) => (
+        <View style={styles.sectionHeaderWithIcon}>
+          <Sparkles size={20} color="#667eea" />
+          <Text style={styles.userTypeLabel}>Choose Your Role</Text>
+        </View>
+        <Text style={styles.userTypeSubtitle}>Select the type of account that best describes you</Text>
+
+        <View style={styles.userTypeGrid}>
+          {userTypes.map((type, index) => (
             <TouchableOpacity
               key={type.id}
               style={[
-                styles.userTypeButton,
-                formData.userType === type.id && styles.userTypeButtonActive,
-                { borderColor: formData.userType === type.id ? type.color : '#E5E7EB' },
+                styles.userTypeCard,
+                formData.userType === type.id && styles.userTypeCardActive,
               ]}
               onPress={() => setFormData({ ...formData, userType: type.id })}
+              activeOpacity={0.8}
             >
-              <View style={styles.userTypeContent}>
-                <View style={styles.userTypeHeader}>
+              <LinearGradient
+                colors={formData.userType === type.id ? type.gradient : ['#F8FAFC', '#F1F5F9']}
+                style={styles.userTypeGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <View style={styles.userTypeIconContainer}>
                   <Text style={styles.userTypeIcon}>{type.icon}</Text>
-                  <Text
-                    style={[
-                      styles.userTypeText,
-                      formData.userType === type.id && { color: type.color },
-                    ]}
-                  >
-                    {type.label}
-                  </Text>
                 </View>
-                <Text style={styles.userTypeDescription}>{type.description}</Text>
-              </View>
+                <Text
+                  style={[
+                    styles.userTypeText,
+                    formData.userType === type.id && styles.userTypeTextActive,
+                  ]}
+                >
+                  {type.label}
+                </Text>
+                <Text
+                  style={[
+                    styles.userTypeDescription,
+                    formData.userType === type.id && styles.userTypeDescriptionActive,
+                  ]}
+                >
+                  {type.description}
+                </Text>
+              </LinearGradient>
             </TouchableOpacity>
           ))}
         </View>
@@ -533,442 +585,513 @@ export default function AuthScreen() {
     );
   };
 
-  return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <Image
-            source={require('../assets/images/favicon.png')}
-            style={styles.logoImage}
-            resizeMode="contain"
-          />
-          <Text style={styles.title}>जनConnect</Text>
-          <Text style={styles.subtitle}>
-            {isLogin
-              ? 'Welcome back to your civic platform!'
-              : currentStep === 1
-                ? 'Join your civic community'
-                : 'Secure your account'}
-          </Text>
+  const renderAnimatedInput = (config) => {
+    const { icon: IconComponent, placeholder, value, onChangeText, secureTextEntry, keyboardType, autoCapitalize, autoComplete, multiline, showEyeIcon, onEyePress, eyeState } = config;
+
+    return (
+      <View style={[styles.inputContainer, value && styles.inputContainerFocused]}>
+        <View style={styles.inputIconContainer}>
+          <IconComponent size={20} color={value ? "#667eea" : "#9CA3AF"} />
         </View>
+        <TextInput
+          style={[styles.input, multiline && styles.inputMultiline]}
+          placeholder={placeholder}
+          placeholderTextColor="#9CA3AF"
+          value={value}
+          onChangeText={onChangeText}
+          secureTextEntry={secureTextEntry}
+          keyboardType={keyboardType}
+          autoCapitalize={autoCapitalize}
+          autoComplete={autoComplete}
+          multiline={multiline}
+        />
+        {showEyeIcon && (
+          <TouchableOpacity style={styles.eyeIcon} onPress={onEyePress}>
+            {eyeState ? (
+              <EyeOff size={20} color="#9CA3AF" />
+            ) : (
+              <Eye size={20} color="#9CA3AF" />
+            )}
+          </TouchableOpacity>
+        )}
+      </View>
+    );
+  };
 
-        {renderStepIndicator()}
+  return (
+    <View style={styles.container}>
+      <LinearGradient
+        colors={['#667eea', '#667eea']}
+        style={styles.backgroundGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      />
 
-        <View style={styles.form}>
-          {renderUserTypeSelection()}
-
-          {/* Step 1: Personal Information (Sign up only) */}
-          {!isLogin && currentStep === 1 && (
-            <>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Personal Information</Text>
-                <Text style={styles.sectionSubtitle}>Fields marked with * are required</Text>
-              </View>
-
-              <View style={styles.inputRow}>
-                <View style={[styles.inputContainer, styles.halfWidth]}>
-                  <User size={20} color="#6B7280" style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="First Name *"
-                    value={formData.firstName}
-                    onChangeText={(text) => setFormData({ ...formData, firstName: text })}
-                    autoCapitalize="words"
-                    autoComplete="given-name"
-                  />
-                </View>
-                <View style={[styles.inputContainer, styles.halfWidth]}>
-                  <User size={20} color="#6B7280" style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Last Name *"
-                    value={formData.lastName}
-                    onChangeText={(text) => setFormData({ ...formData, lastName: text })}
-                    autoCapitalize="words"
-                    autoComplete="family-name"
-                  />
-                </View>
-              </View>
-
-              <View style={styles.inputContainer}>
-                <Mail size={20} color="#6B7280" style={styles.inputIcon} />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Email Address *"
-                  value={formData.email}
-                  onChangeText={(text) => setFormData({ ...formData, email: text.toLowerCase() })}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoComplete="email"
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+          <View style={styles.header}>
+            <View style={styles.logoContainer}>
+              <LinearGradient
+                colors={['#FFFFFF', '#F8FAFC']}
+                style={styles.logoBackground}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <Image
+                  source={require('../assets/images/favicon.png')}
+                  style={styles.logoImage}
+                  resizeMode="contain"
                 />
-              </View>
+              </LinearGradient>
+            </View>
+            <Text style={styles.title}>जनConnect</Text>
+            <Text style={styles.subtitle}>
+              {isLogin
+                ? 'Welcome back to your civic platform'
+                : currentStep === 1
+                  ? 'Join your civic community today'
+                  : 'Complete your account setup'}
+            </Text>
+          </View>
 
-              <View style={styles.inputContainer}>
-                <Phone size={20} color="#6B7280" style={styles.inputIcon} />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Phone Number * (e.g., +91 9876543210)"
-                  value={formData.phone}
-                  onChangeText={(text) => setFormData({ ...formData, phone: text })}
-                  keyboardType="phone-pad"
-                  autoComplete="tel"
-                />
-              </View>
+          {renderStepIndicator()}
 
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Address (Optional)</Text>
-                <Text style={styles.sectionSubtitle}>Help us serve your area better</Text>
-              </View>
+          <View style={styles.formContainer}>
+            <View style={styles.formCard}>
+              {renderUserTypeSelection()}
 
-              <View style={styles.inputContainer}>
-                <MapPin size={20} color="#6B7280" style={styles.inputIcon} />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Full Address"
-                  value={formData.address}
-                  onChangeText={(text) => setFormData({ ...formData, address: text })}
-                  multiline
-                  autoComplete="street-address"
-                />
-              </View>
-
-              <View style={styles.inputRow}>
-                <View style={[styles.inputContainer, styles.halfWidth]}>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="City"
-                    value={formData.city}
-                    onChangeText={(text) => setFormData({ ...formData, city: text })}
-                    autoCapitalize="words"
-                    autoComplete="address-level2"
-                  />
-                </View>
-                <View style={[styles.inputContainer, styles.halfWidth]}>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="State"
-                    value={formData.state}
-                    onChangeText={(text) => setFormData({ ...formData, state: text })}
-                    autoCapitalize="words"
-                    autoComplete="address-level1"
-                  />
-                </View>
-              </View>
-
-              <View style={styles.inputContainer}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Postal Code"
-                  value={formData.postalCode}
-                  onChangeText={(text) => setFormData({ ...formData, postalCode: text })}
-                  keyboardType="numeric"
-                  autoComplete="postal-code"
-                />
-              </View>
-            </>
-          )}
-
-          {/* Step 2: Password Setup and Admin Location Selection */}
-          {(isLogin || (!isLogin && currentStep === 2)) && (
-            <>
-              {!isLogin && (
-                <View style={styles.sectionHeader}>
-                  <Text style={styles.sectionTitle}>Account Security</Text>
-                  <Text style={styles.sectionSubtitle}>Create a strong password to protect your account</Text>
-                </View>
-              )}
-
-              {isLogin && (
+              {/* Step 1: Personal Information (Sign up only) */}
+              {!isLogin && currentStep === 1 && (
                 <>
-                  <View style={styles.inputContainer}>
-                    <Mail size={20} color="#6B7280" style={styles.inputIcon} />
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Email Address"
-                      value={formData.email}
-                      onChangeText={(text) => setFormData({ ...formData, email: text.toLowerCase() })}
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                      autoComplete="email"
-                    />
+                  <View style={styles.sectionHeader}>
+                    <Text style={styles.sectionTitle}>Personal Information</Text>
+                    <Text style={styles.sectionSubtitle}>Fields marked with * are required</Text>
                   </View>
 
-                  <TouchableOpacity style={styles.linkButton} onPress={resendVerification}>
-                    <Text style={styles.linkText}>Need to verify your email? Tap here</Text>
-                  </TouchableOpacity>
+                  <View style={styles.inputRow}>
+                    <View style={styles.halfWidth}>
+                      {renderAnimatedInput({
+                        icon: User,
+                        placeholder: "First Name *",
+                        value: formData.firstName,
+                        onChangeText: (text) => setFormData({ ...formData, firstName: text }),
+                        autoCapitalize: "words",
+                        autoComplete: "given-name"
+                      })}
+                    </View>
+                    <View style={styles.halfWidth}>
+                      {renderAnimatedInput({
+                        icon: User,
+                        placeholder: "Last Name *",
+                        value: formData.lastName,
+                        onChangeText: (text) => setFormData({ ...formData, lastName: text }),
+                        autoCapitalize: "words",
+                        autoComplete: "family-name"
+                      })}
+                    </View>
+                  </View>
+
+                  {renderAnimatedInput({
+                    icon: Mail,
+                    placeholder: "Email Address *",
+                    value: formData.email,
+                    onChangeText: (text) => setFormData({ ...formData, email: text.toLowerCase() }),
+                    keyboardType: "email-address",
+                    autoCapitalize: "none",
+                    autoComplete: "email"
+                  })}
+
+                  {renderAnimatedInput({
+                    icon: Phone,
+                    placeholder: "Phone Number * (e.g., +91 9876543210)",
+                    value: formData.phone,
+                    onChangeText: (text) => setFormData({ ...formData, phone: text }),
+                    keyboardType: "phone-pad",
+                    autoComplete: "tel"
+                  })}
+
+                  <View style={styles.addressSection}>
+                    <View style={styles.sectionHeader}>
+                      <Text style={styles.sectionTitle}>Address (Optional)</Text>
+                      <Text style={styles.sectionSubtitle}>Help us serve your area better</Text>
+                    </View>
+
+                    {renderAnimatedInput({
+                      icon: MapPin,
+                      placeholder: "Full Address",
+                      value: formData.address,
+                      onChangeText: (text) => setFormData({ ...formData, address: text }),
+                      multiline: true,
+                      autoComplete: "street-address"
+                    })}
+
+                    <View style={styles.inputRow}>
+                      <View style={styles.halfWidth}>
+                        {renderAnimatedInput({
+                          icon: MapPin,
+                          placeholder: "City",
+                          value: formData.city,
+                          onChangeText: (text) => setFormData({ ...formData, city: text }),
+                          autoCapitalize: "words",
+                          autoComplete: "address-level2"
+                        })}
+                      </View>
+                      <View style={styles.halfWidth}>
+                        {renderAnimatedInput({
+                          icon: MapPin,
+                          placeholder: "State",
+                          value: formData.state,
+                          onChangeText: (text) => setFormData({ ...formData, state: text }),
+                          autoCapitalize: "words",
+                          autoComplete: "address-level1"
+                        })}
+                      </View>
+                    </View>
+
+                    {renderAnimatedInput({
+                      icon: MapPin,
+                      placeholder: "Postal Code",
+                      value: formData.postalCode,
+                      onChangeText: (text) => setFormData({ ...formData, postalCode: text }),
+                      keyboardType: "numeric",
+                      autoComplete: "postal-code"
+                    })}
+                  </View>
                 </>
               )}
 
-              <View style={styles.inputContainer}>
-                <Lock size={20} color="#6B7280" style={styles.inputIcon} />
-                <TextInput
-                  style={styles.input}
-                  placeholder={isLogin ? "Password" : "Create Password *"}
-                  value={formData.password}
-                  onChangeText={(text) => setFormData({ ...formData, password: text })}
-                  secureTextEntry={!showPassword}
-                  autoComplete={isLogin ? "current-password" : "new-password"}
-                />
-                <TouchableOpacity
-                  style={styles.eyeIcon}
-                  onPress={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? (
-                    <EyeOff size={20} color="#6B7280" />
-                  ) : (
-                    <Eye size={20} color="#6B7280" />
-                  )}
-                </TouchableOpacity>
-              </View>
-
-              {isLogin && (
-                <TouchableOpacity
-                  style={styles.forgotPasswordButton}
-                  onPress={() => setShowForgotPassword(true)}
-                >
-                  <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-                </TouchableOpacity>
-              )}
-
-              {!isLogin && (
+              {/* Step 2: Password Setup and Admin Location Selection */}
+              {(isLogin || (!isLogin && currentStep === 2)) && (
                 <>
-                  <View style={styles.inputContainer}>
-                    <Lock size={20} color="#6B7280" style={styles.inputIcon} />
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Confirm Password *"
-                      value={formData.confirmPassword}
-                      onChangeText={(text) => setFormData({ ...formData, confirmPassword: text })}
-                      secureTextEntry={!showConfirmPassword}
-                      autoComplete="new-password"
-                    />
-                    <TouchableOpacity
-                      style={styles.eyeIcon}
-                      onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                    >
-                      {showConfirmPassword ? (
-                        <EyeOff size={20} color="#6B7280" />
-                      ) : (
-                        <Eye size={20} color="#6B7280" />
-                      )}
-                    </TouchableOpacity>
-                  </View>
-
-                  <Text style={styles.passwordHint}>
-                    Password must be at least 8 characters long
-                  </Text>
-
-                  {/* Location Selection for Admin Roles */}
-                  {(formData.userType === 'area_super_admin' || formData.userType === 'department_admin') && (
-                    <View style={styles.locationSection}>
-                      <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>Administrative Assignment</Text>
-                        <Text style={styles.sectionSubtitle}>Select your assigned location and department</Text>
-                      </View>
-
-                      <DropdownSelector
-                        label="State"
-                        placeholder="Select a state"
-                        options={locationData.states}
-                        selectedValue={formData.stateId}
-                        onSelect={handleStateSelect}
-                        loading={locationData.loadingStates}
-                        required
-                      />
-
-                      {formData.stateId && (
-                        <DropdownSelector
-                          label="District"
-                          placeholder="Select a district"
-                          options={locationData.districts}
-                          selectedValue={formData.districtId}
-                          onSelect={handleDistrictSelect}
-                          loading={locationData.loadingDistricts}
-                          required
-                        />
-                      )}
-
-                      {formData.userType === 'area_super_admin' && formData.districtId && (
-                        <DropdownSelector
-                          label="Area to Manage"
-                          placeholder="Select an area"
-                          options={locationData.areas}
-                          selectedValue={formData.areaId}
-                          onSelect={handleAreaSelect}
-                          loading={locationData.loadingAreas}
-                          required
-                        />
-                      )}
-
-                      {formData.userType === 'department_admin' && (
-                        <DropdownSelector
-                          label="Department to Manage"
-                          placeholder="Select a department"
-                          options={locationData.departments}
-                          selectedValue={formData.departmentId}
-                          onSelect={handleDepartmentSelect}
-                          loading={locationData.loadingDepartments}
-                          required
-                          renderOption={(dept) => (
-                            <View>
-                              <Text style={styles.optionName}>{dept.name}</Text>
-                              <Text style={styles.optionCode}>({dept.code})</Text>
-                              <Text style={styles.optionCategory}>
-                                {dept.category.charAt(0).toUpperCase() + dept.category.slice(1)}
-                              </Text>
-                              {dept.description && (
-                                <Text style={styles.optionDescription}>{dept.description}</Text>
-                              )}
-                            </View>
-                          )}
-                        />
-                      )}
+                  {!isLogin && (
+                    <View style={styles.sectionHeader}>
+                      <Text style={styles.sectionTitle}>Account Security</Text>
+                      <Text style={styles.sectionSubtitle}>Create a strong password to protect your account</Text>
                     </View>
                   )}
+
+                  {isLogin && (
+                    <>
+                      {renderAnimatedInput({
+                        icon: Mail,
+                        placeholder: "Email Address",
+                        value: formData.email,
+                        onChangeText: (text) => setFormData({ ...formData, email: text.toLowerCase() }),
+                        keyboardType: "email-address",
+                        autoCapitalize: "none",
+                        autoComplete: "email"
+                      })}
+
+                      <TouchableOpacity style={styles.linkButton} onPress={resendVerification}>
+                        <Text style={styles.linkText}>Need to verify your email? Tap here</Text>
+                      </TouchableOpacity>
+                    </>
+                  )}
+
+                  {renderAnimatedInput({
+                    icon: Lock,
+                    placeholder: isLogin ? "Password" : "Create Password *",
+                    value: formData.password,
+                    onChangeText: (text) => setFormData({ ...formData, password: text }),
+                    secureTextEntry: !showPassword,
+                    autoComplete: isLogin ? "current-password" : "new-password",
+                    showEyeIcon: true,
+                    onEyePress: () => setShowPassword(!showPassword),
+                    eyeState: showPassword
+                  })}
+
+                  {isLogin && (
+                    <TouchableOpacity
+                      style={styles.forgotPasswordButton}
+                      onPress={() => setShowForgotPassword(true)}
+                    >
+                      <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+                    </TouchableOpacity>
+                  )}
+
+                  {!isLogin && (
+                    <>
+                      {renderAnimatedInput({
+                        icon: Lock,
+                        placeholder: "Confirm Password *",
+                        value: formData.confirmPassword,
+                        onChangeText: (text) => setFormData({ ...formData, confirmPassword: text }),
+                        secureTextEntry: !showConfirmPassword,
+                        autoComplete: "new-password",
+                        showEyeIcon: true,
+                        onEyePress: () => setShowConfirmPassword(!showConfirmPassword),
+                        eyeState: showConfirmPassword
+                      })}
+
+                      <Text style={styles.passwordHint}>
+                        Password must be at least 8 characters long
+                      </Text>
+
+                      {/* Location Selection for Admin Roles */}
+                      {(formData.userType === 'area_super_admin' || formData.userType === 'department_admin') && (
+                        <View style={styles.locationSection}>
+                          <View style={styles.sectionHeader}>
+                            <Text style={styles.sectionTitle}>Administrative Assignment</Text>
+                            <Text style={styles.sectionSubtitle}>Select your assigned location and department</Text>
+                          </View>
+
+                          <DropdownSelector
+                            label="State"
+                            placeholder="Select a state"
+                            options={locationData.states}
+                            selectedValue={formData.stateId}
+                            onSelect={handleStateSelect}
+                            loading={locationData.loadingStates}
+                            required
+                          />
+
+                          {formData.stateId && (
+                            <DropdownSelector
+                              label="District"
+                              placeholder="Select a district"
+                              options={locationData.districts}
+                              selectedValue={formData.districtId}
+                              onSelect={handleDistrictSelect}
+                              loading={locationData.loadingDistricts}
+                              required
+                            />
+                          )}
+
+                          {formData.userType === 'area_super_admin' && formData.districtId && (
+                            <DropdownSelector
+                              label="Area to Manage"
+                              placeholder="Select an area"
+                              options={locationData.areas}
+                              selectedValue={formData.areaId}
+                              onSelect={handleAreaSelect}
+                              loading={locationData.loadingAreas}
+                              required
+                            />
+                          )}
+
+                          {formData.userType === 'department_admin' && (
+                            <DropdownSelector
+                              label="Department to Manage"
+                              placeholder="Select a department"
+                              options={locationData.departments}
+                              selectedValue={formData.departmentId}
+                              onSelect={handleDepartmentSelect}
+                              loading={locationData.loadingDepartments}
+                              required
+                              renderOption={(dept) => (
+                                <View>
+                                  <Text style={styles.optionName}>{dept.name}</Text>
+                                  <Text style={styles.optionCode}>({dept.code})</Text>
+                                  <Text style={styles.optionCategory}>
+                                    {dept.category.charAt(0).toUpperCase() + dept.category.slice(1)}
+                                  </Text>
+                                  {dept.description && (
+                                    <Text style={styles.optionDescription}>{dept.description}</Text>
+                                  )}
+                                </View>
+                              )}
+                            />
+                          )}
+                        </View>
+                      )}
+                    </>
+                  )}
                 </>
               )}
-            </>
-          )}
 
-          <View style={styles.buttonContainer}>
-            {!isLogin && currentStep === 2 && (
-              <TouchableOpacity
-                style={styles.backButton}
-                onPress={goBack}
-                disabled={loading}
-              >
-                <Text style={styles.backButtonText}>Back</Text>
-              </TouchableOpacity>
-            )}
+              <View style={styles.buttonContainer}>
+                {!isLogin && currentStep === 2 && (
+                  <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={goBack}
+                    disabled={loading}
+                  >
+                    <ArrowLeft size={20} color="#667eea" style={styles.backButtonIcon} />
+                    <Text style={styles.backButtonText}>Back</Text>
+                  </TouchableOpacity>
+                )}
 
-            <TouchableOpacity
-              style={[
-                styles.authButton,
-                loading && styles.authButtonDisabled,
-                !isLogin && currentStep === 2 && styles.authButtonHalf
-              ]}
-              onPress={handleAuthButtonPress}
-              disabled={loading}
-            >
-              <Text style={styles.authButtonText}>
-                {loading
-                  ? (isLogin ? 'Signing In...' : currentStep === 1 ? 'Continue' : 'Creating Account...')
-                  : (isLogin ? 'Sign In' : currentStep === 1 ? 'Continue' : 'Create Account')
-                }
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.switchContainer}>
-            <Text style={styles.switchText}>
-              {isLogin ? "Don't have an account? " : 'Already have an account? '}
-            </Text>
-            <TouchableOpacity
-              onPress={() => {
-                setIsLogin(!isLogin);
-                setCurrentStep(1);
-                resetForm();
-                setLoading(false);
-              }}
-              disabled={loading}
-            >
-              <Text style={[styles.switchLink, loading && styles.switchLinkDisabled]}>
-                {isLogin ? 'Sign Up' : 'Sign In'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Terms and Privacy Notice */}
-          {!isLogin && (
-            <View style={styles.termsContainer}>
-              <Text style={styles.termsText}>
-                By creating an account, you agree to our Terms of Service and Privacy Policy.
-                Your data helps us serve your community better.
-              </Text>
-            </View>
-          )}
-        </View>
-
-        {/* Forgot Password Modal */}
-        <Modal visible={showForgotPassword} transparent animationType="slide">
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Reset Password</Text>
-              <Text style={styles.modalSubtitle}>
-                Enter your email address and we'll send you a link to reset your password.
-              </Text>
-
-              <View style={styles.inputContainer}>
-                <Mail size={20} color="#6B7280" style={styles.inputIcon} />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter your email"
-                  value={resetEmail}
-                  onChangeText={setResetEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
+                <TouchableOpacity
+                  style={[
+                    styles.authButton,
+                    loading && styles.authButtonDisabled,
+                    !isLogin && currentStep === 2 && styles.authButtonFlex
+                  ]}
+                  onPress={handleAuthButtonPress}
+                  disabled={loading}
+                >
+                  <LinearGradient
+                    colors={loading ? ['#9CA3AF', '#6B7280'] : ['#667eea', '#667eea']}
+                    style={styles.authButtonGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                  >
+                    <Text style={styles.authButtonText}>
+                      {loading
+                        ? (isLogin ? 'Signing In...' : currentStep === 1 ? 'Continue' : 'Creating Account...')
+                        : (isLogin ? 'Sign In' : currentStep === 1 ? 'Continue' : 'Create Account')
+                      }
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
               </View>
 
-              <View style={styles.modalActions}>
+              <View style={styles.switchContainer}>
+                <Text style={styles.switchText}>
+                  {isLogin ? "Don't have an account? " : 'Already have an account? '}
+                </Text>
                 <TouchableOpacity
-                  style={styles.modalCancelButton}
                   onPress={() => {
-                    setShowForgotPassword(false);
-                    setResetEmail('');
+                    setIsLogin(!isLogin);
+                    setCurrentStep(1);
+                    resetForm();
+                    setLoading(false);
                   }}
+                  disabled={loading}
                 >
-                  <Text style={styles.modalCancelText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.modalSubmitButton, resetLoading && styles.modalSubmitButtonDisabled]}
-                  onPress={handleForgotPassword}
-                  disabled={resetLoading}
-                >
-                  <Text style={styles.modalSubmitText}>
-                    {resetLoading ? 'Sending...' : 'Send Reset Link'}
+                  <Text style={[styles.switchLink, loading && styles.switchLinkDisabled]}>
+                    {isLogin ? 'Sign Up' : 'Sign In'}
                   </Text>
                 </TouchableOpacity>
               </View>
+
+              {/* Terms and Privacy Notice */}
+              {!isLogin && (
+                <View style={styles.termsContainer}>
+                  <Text style={styles.termsText}>
+                    By creating an account, you agree to our Terms of Service and Privacy Policy.
+                    Your data helps us serve your community better.
+                  </Text>
+                </View>
+              )}
             </View>
           </View>
-        </Modal>
-      </ScrollView>
-    </KeyboardAvoidingView>
+
+          {/* Forgot Password Modal */}
+          <Modal visible={showForgotPassword} transparent animationType="fade">
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <LinearGradient
+                  colors={['#FFFFFF', '#F8FAFC']}
+                  style={styles.modalGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <View style={styles.modalHeader}>
+                    <Text style={styles.modalTitle}>Reset Password</Text>
+                    <Text style={styles.modalSubtitle}>
+                      Enter your email address and we'll send you a link to reset your password.
+                    </Text>
+                  </View>
+
+                  {renderAnimatedInput({
+                    icon: Mail,
+                    placeholder: "Enter your email",
+                    value: resetEmail,
+                    onChangeText: setResetEmail,
+                    keyboardType: "email-address",
+                    autoCapitalize: "none"
+                  })}
+
+                  <View style={styles.modalActions}>
+                    <TouchableOpacity
+                      style={styles.modalCancelButton}
+                      onPress={() => {
+                        setShowForgotPassword(false);
+                        setResetEmail('');
+                      }}
+                    >
+                      <Text style={styles.modalCancelText}>Cancel</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.modalSubmitButton, resetLoading && styles.modalSubmitButtonDisabled]}
+                      onPress={handleForgotPassword}
+                      disabled={resetLoading}
+                    >
+                      <LinearGradient
+                        colors={resetLoading ? ['#9CA3AF', '#6B7280'] : ['#1e40ae', '#1e40ae']}
+                        style={styles.modalSubmitGradient}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                      >
+                        <Text style={styles.modalSubmitText}>
+                          {resetLoading ? 'Sending...' : 'Send Reset Link'}
+                        </Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  </View>
+                </LinearGradient>
+              </View>
+            </View>
+          </Modal>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F8FAFC',
+  },
+  backgroundGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '50%',
+  },
+  keyboardAvoidingView: {
+    flex: 1,
   },
   scrollContainer: {
     flex: 1,
   },
   header: {
     alignItems: 'center',
+    paddingTop: 80,
+    paddingBottom: 40,
+    paddingHorizontal: 24,
+  },
+  logoContainer: {
     marginBottom: 20,
-    marginTop: 60,
+  },
+  logoBackground: {
+    width: 80,
+    height: 80,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 8,
   },
   logoImage: {
     width: 50,
     height: 50,
-    marginBottom: 10,
   },
   title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: 32,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    marginBottom: 8,
+    letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: 16,
+    color: 'rgba(255, 255, 255, 0.9)',
     textAlign: 'center',
-    marginTop: 4,
+    lineHeight: 24,
+    maxWidth: 280,
   },
   stepIndicator: {
     paddingHorizontal: 40,
@@ -978,137 +1101,222 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 10,
+    marginBottom: 16,
   },
   step: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: '#E5E7EB',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.5)',
   },
   stepActive: {
-    backgroundColor: '#1E40AF',
+    backgroundColor: '#FFFFFF',
+    borderColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
   },
   stepText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#6B7280',
+    fontSize: 16,
+    fontWeight: '700',
+    color: 'rgba(255, 255, 255, 0.8)',
   },
   stepTextActive: {
-    color: '#FFFFFF',
+    color: '#1e40ae',
   },
   stepLine: {
     flex: 1,
-    height: 2,
-    backgroundColor: '#E5E7EB',
-    marginHorizontal: 10,
+    height: 3,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    marginHorizontal: 16,
+    borderRadius: 1.5,
   },
   stepLineActive: {
-    backgroundColor: '#1E40AF',
+    backgroundColor: '#FFFFFF',
   },
   stepLabels: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    paddingHorizontal: 8,
   },
   stepLabel: {
-    fontSize: 12,
-    color: '#6B7280',
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.8)',
     fontWeight: '500',
   },
-  form: {
+  stepLabelActive: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  formContainer: {
+    flex: 1,
     paddingHorizontal: 24,
-    paddingBottom: 40,
+  },
+  formCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 32,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 16,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 24,
+    elevation: 16,
+    marginBottom: 40,
   },
   sectionHeader: {
-    marginBottom: 20,
-    marginTop: 10,
+    marginBottom: 24,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 4,
-  },
-  sectionSubtitle: {
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  userTypeContainer: {
-    marginBottom: 30,
-  },
-  userTypeLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 12,
-  },
-  userTypeButtons: {
-    gap: 12,
-  },
-  userTypeButton: {
-    padding: 16,
-    borderWidth: 2,
-    borderRadius: 12,
-    borderColor: '#E5E7EB',
-    backgroundColor: '#F9FAFB',
-  },
-  userTypeButtonActive: {
-    backgroundColor: '#F0F9FF',
-  },
-  userTypeContent: {
-    gap: 8,
-  },
-  userTypeHeader: {
+  sectionHeaderWithIcon: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 8,
+  },
+  sectionTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 6,
+    marginLeft: 8,
+  },
+  sectionSubtitle: {
+    fontSize: 15,
+    color: '#6B7280',
+    lineHeight: 22,
+  },
+  userTypeContainer: {
+    marginBottom: 32,
+  },
+  userTypeLabel: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginLeft: 8,
+  },
+  userTypeSubtitle: {
+    fontSize: 15,
+    color: '#6B7280',
+    marginBottom: 20,
+    lineHeight: 22,
+  },
+  userTypeGrid: {
+    gap: 16,
+  },
+  userTypeCard: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  userTypeCardActive: {
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 8,
+    transform: [{ scale: 1.02 }],
+  },
+  userTypeGradient: {
+    padding: 20,
+    minHeight: 120,
+  },
+  userTypeIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
   },
   userTypeIcon: {
     fontSize: 24,
-    marginRight: 12,
   },
   userTypeText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#6B7280',
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#374151',
+    marginBottom: 6,
+  },
+  userTypeTextActive: {
+    color: '#FFFFFF',
   },
   userTypeDescription: {
     fontSize: 14,
     color: '#6B7280',
-    marginLeft: 36,
+    lineHeight: 20,
+  },
+  userTypeDescriptionActive: {
+    color: 'rgba(255, 255, 255, 0.9)',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB',
-    borderRadius: 12,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 16,
     marginBottom: 16,
-    paddingHorizontal: 16,
-    borderWidth: 1,
+    paddingHorizontal: 20,
+    borderWidth: 2,
     borderColor: '#E5E7EB',
+    minHeight: 56,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  inputContainerFocused: {
+    borderColor: '#6d63c6',
+    backgroundColor: '#FFFFFF',
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   inputRow: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 16,
   },
   halfWidth: {
     flex: 1,
   },
-  inputIcon: {
-    marginRight: 12,
+  inputIconContainer: {
+    marginRight: 16,
   },
   input: {
     flex: 1,
-    height: 50,
     fontSize: 16,
-    color: '#111827',
+    color: '#1F2937',
+    paddingVertical: 16,
+  },
+  inputMultiline: {
+    paddingTop: 16,
+    paddingBottom: 16,
+    textAlignVertical: 'top',
   },
   eyeIcon: {
-    padding: 4,
+    padding: 8,
+    marginLeft: 8,
   },
   passwordHint: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#6B7280',
     marginTop: -12,
     marginBottom: 16,
@@ -1116,24 +1324,32 @@ const styles = StyleSheet.create({
   },
   linkButton: {
     alignSelf: 'flex-end',
-    marginTop: -12,
+    marginTop: -8,
     marginBottom: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
   },
   linkText: {
     fontSize: 14,
-    color: '#1E40AF',
-    textDecorationLine: 'underline',
+    color: '#667eea',
+    fontWeight: '600',
+  },
+  addressSection: {
+    marginTop: 24,
+    paddingTop: 24,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
   },
   locationSection: {
-    marginTop: 24,
-    paddingTop: 20,
+    marginTop: 32,
+    paddingTop: 24,
     borderTopWidth: 1,
     borderTopColor: '#E5E7EB',
   },
   optionName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#111827',
+    color: '#1F2937',
     marginBottom: 2,
   },
   optionCode: {
@@ -1143,7 +1359,7 @@ const styles = StyleSheet.create({
   },
   optionCategory: {
     fontSize: 12,
-    color: '#8B5CF6',
+    color: '#667eea',
     fontWeight: '500',
   },
   optionDescription: {
@@ -1154,128 +1370,168 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     flexDirection: 'row',
-    gap: 12,
-    marginTop: 8,
+    gap: 16,
+    marginTop: 24,
+    marginBottom: 24,
   },
   backButton: {
-    flex: 1,
-    backgroundColor: '#E5E7EB',
-    paddingVertical: 16,
-    borderRadius: 12,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F8FAFC',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: '#E5E7EB',
+    minWidth: 120,
+  },
+  backButtonIcon: {
+    marginRight: 8,
   },
   backButtonText: {
-    color: '#374151',
+    color: '#667eea',
     fontSize: 16,
     fontWeight: '600',
   },
   authButton: {
     flex: 1,
-    backgroundColor: '#1E40AF',
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 8,
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
     elevation: 8,
   },
-  authButtonHalf: {
+  authButtonFlex: {
     flex: 2,
   },
+  authButtonGradient: {
+    paddingVertical: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   authButtonDisabled: {
-    backgroundColor: '#9CA3AF',
-    elevation: 0,
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   authButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
   switchContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 24,
+    alignItems: 'center',
+    paddingVertical: 16,
   },
   switchText: {
     color: '#6B7280',
-    fontSize: 14,
+    fontSize: 15,
   },
   switchLink: {
-    color: '#1E40AF',
-    fontSize: 14,
+    color: '#667eea',
+    fontSize: 15,
     fontWeight: '600',
+    marginLeft: 4,
   },
   switchLinkDisabled: {
     color: '#9CA3AF',
   },
   termsContainer: {
-    marginTop: 20,
+    marginTop: 16,
     paddingHorizontal: 8,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#F3F4F6',
   },
   termsText: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#6B7280',
     textAlign: 'center',
-    lineHeight: 18,
+    lineHeight: 20,
   },
   forgotPasswordButton: {
     alignSelf: 'flex-end',
     marginTop: 8,
     marginBottom: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
   },
   forgotPasswordText: {
     fontSize: 14,
-    color: '#1E40AF',
-    fontWeight: '500',
-    textDecorationLine: 'underline',
+    color: '#667eea',
+    fontWeight: '600',
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: 24,
   },
   modalContent: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 24,
     width: '100%',
     maxWidth: 400,
+    borderRadius: 24,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 20,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 25,
+    elevation: 25,
+  },
+  modalGradient: {
+    padding: 32,
+  },
+  modalHeader: {
+    marginBottom: 24,
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: '700',
-    color: '#111827',
+    color: '#1F2937',
     marginBottom: 8,
   },
   modalSubtitle: {
-    fontSize: 14,
+    fontSize: 15,
     color: '#6B7280',
-    marginBottom: 20,
-    lineHeight: 20,
+    lineHeight: 22,
   },
   modalActions: {
     flexDirection: 'row',
-    gap: 12,
-    marginTop: 20,
+    gap: 16,
+    marginTop: 24,
   },
   modalCancelButton: {
     flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
-    backgroundColor: '#E5E7EB',
+    paddingVertical: 16,
+    borderRadius: 12,
+    backgroundColor: '#F3F4F6',
     alignItems: 'center',
   },
   modalCancelText: {
     color: '#374151',
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
   },
   modalSubmitButton: {
     flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
-    backgroundColor: '#1E40AF',
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  modalSubmitGradient: {
+    paddingVertical: 16,
     alignItems: 'center',
   },
   modalSubmitButtonDisabled: {
@@ -1283,7 +1539,7 @@ const styles = StyleSheet.create({
   },
   modalSubmitText: {
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
   },
 });
