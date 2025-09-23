@@ -235,7 +235,7 @@ export default function TenderDashboard() {
 
       Alert.alert(
         'Bid Submitted',
-        `Your bid of $${bidAmount} has been submitted successfully!`,
+        `Your bid of Rs.${bidAmount} has been submitted successfully!`,
         [
           {
             text: 'OK',
@@ -681,7 +681,7 @@ export default function TenderDashboard() {
 
             <View style={styles.bidForm}>
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Bid Amount ($)</Text>
+                <Text style={styles.inputLabel}>Bid Amount (Rs.)</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="Enter your bid amount"
